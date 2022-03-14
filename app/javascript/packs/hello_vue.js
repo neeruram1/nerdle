@@ -1,7 +1,6 @@
 import { createApp } from 'vue'
-import App from '../app.vue'
+import Game from '../Game.vue'
 document.addEventListener('DOMContentLoaded', () => {
-  const app = createApp(App)
+  const app = createApp(Game)
   app.mount('#app')
 })
-
