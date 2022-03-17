@@ -1,7 +1,9 @@
 <script>
 export default {
   props: {
-    show: Boolean
+    show: Boolean,
+    gameStatus: '',
+    word: ''
   }
 }
 </script>
@@ -16,7 +18,7 @@ export default {
           </div>
 
           <div class="modal-body">
-            <slot name="body">You won!</slot>
+            <slot name="body">You {{ gameStatus }}! The word of the day is {{ word }}</slot>
           </div>
 
           <div class="modal-footer">

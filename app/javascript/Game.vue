@@ -5,6 +5,7 @@ import { dailyWord, wordList } from './wordList'
 export default {
   data() {
     return {
+      gameStatus: '',
       wordList: wordList,
       showModal: false,
       letterArray: [],
@@ -20,11 +21,11 @@ export default {
         }))
       ),
       wordOfTheDay: dailyWord(),
-      alphabet: [
-        { letters: 'qwertyuiop' },
-        { letters: 'asdfghjkl' },
-        { letters: 'zxcvbnm' }
-      ]
+      alphabet:   [
+        'qwertyuiop'.split(''),
+        'asdfghjkl'.split(''),
+        'zxcvbnm'.split('')
+        ]
     }  
   },
 
@@ -39,11 +40,11 @@ export default {
       let letter = String.fromCharCode(e.keyCode).toLowerCase()
       if (this.allowInput) {
         if (e.key === 'Enter') {
-          this.checkedTiles()
+          this.clickHandler()
         } else if (e.key === 'Backspace') {
           this.clearTile()
         } else if (alphabet.includes(e.code)) {
-          this.captureLetters(letter)
+          this.keyboardClickHandler(letter) 
         }
       } else {
         e.preventDefault()
@@ -52,13 +53,10 @@ export default {
   },
 
   computed: {
-    guess() {
-      return this.letterArray.slice(0,5)
-    },
-
     word() {
       return this.letterArray.slice(0,5).join().replace(/,/g, '')
     },
+
     currentRow() {
       return this.board[this.rowIndex];
     },
@@ -70,7 +68,7 @@ export default {
     submitButtonStyles() {
     if (this.canSubmit) {
       return {
-        'background-color': '#4c7ef3',
+        'background-color': '#6aaa64',
         'cursor': 'pointer'
       }
     } else {
@@ -83,7 +81,15 @@ export default {
   },
 
   methods: {
-    clearTile() {
+    clickHandler() {
+      this.checkedTiles();
+    },
+
+    keyboardClickHandler(letter) {
+      this.captureLetters(letter);
+    },
+    
+  clearTile() {
     for (let tile of [...this.currentRow].reverse()) {
       if (tile.letter) {
         tile.letter = ''
@@ -96,13 +102,9 @@ export default {
   captureLetters(letter) {
     this.invalidWord = false
     this.letterArray.push(letter);
+    
     for (let i = 0; i < 5; i++) {
-      this.currentRow[i].letter = this.guess[i]
-    }
-    for (let i = 0; i < this.currentRow.length; i++) {
-      if (this.currentRow[i].letter) {
-        this.currentRow[i].status = 'filled'
-        }
+      this.currentRow[i].letter = this.letterArray[i]
       }
     },
 
@@ -114,14 +116,23 @@ export default {
 
       if (this.canSubmit) {
         this.currentRow.forEach(this.checkTile)
+
       if (this.currentRow.every(this.isCorrect)) {
         this.allowInput = false
         this.isActive = false
         this.showModal = true
-        return console.log('yay')
+        this.gameStatus = 'won'
         }
+
+      if (this.rowIndex === 5 && this.currentRow.every(this.isCorrect) === false) {
+        this.allowInput = false
+        this.isActive = false
+        this.showModal = true
+        this.gameStatus = 'lost'
+      }
         this.rowIndex++
       }
+
       return this.letterArray = []
     },
 
@@ -144,9 +155,11 @@ export default {
 
 <template>
 <div class='game'>
+<p></p>
   <h1>Nerdle</h1>
+  <p></p>
     <Teleport to="body">
-    <modal :show="showModal" @close="showModal = false">
+    <modal :word="wordOfTheDay" :gameStatus="gameStatus" :show="showModal" @close="showModal = false">
       <template #header>
         <h3>Nerdle</h3>
       </template>
@@ -169,14 +182,17 @@ export default {
 
   <div id='keyboard'>
     <span class='keyboard-row' v-for="(row) in alphabet">
-        <button class='keyboard-button' v-for="(letter) in row.letters" @click="captureLetters(letter)">
+      <div v-for="(letter, index) in row">
+        <button class='keyboard-button' @click="keyboardClickHandler(letter)">
           {{ letter }}
         </button>
+      </div>
     </span>
-    <button @click="checkedTiles()" :style="submitButtonStyles">Enter</button>
+    <button class='big-button' @click="clickHandler()" :style="submitButtonStyles">Enter</button>
   </div>
 </div>
 </template>
+
 <style>
  body {
   font-family: sans-serif;
@@ -184,12 +200,10 @@ export default {
   max-width: 500px;
   margin: 0px auto;
   background-color:slategray;
-}
-
-.game {
   font-family: sans-serif;
   font-variant: small-caps;
 }
+
 .board {
   display: grid;
   grid-template-rows: repeat(6, 1fr);
@@ -211,25 +225,43 @@ export default {
   display: flex;
   width: 100%;
   margin: 0 auto 8px;
-  touch-action: manipulation;
+  justify-content: center;
+  align-content: center;
 }
 
 .keyboard-button {
   font-family: inherit;
-  font-weight: bold;
-  font-size: 20px;
-  border: solid 1px black;
-  margin: 5px 3px 0px 0px;
+  margin: 5px 5px 0 0;
   height: 50px;
   border-radius: 4px;
   cursor: pointer;
   user-select: none;
-  color: #1a1a1b;
-  flex: 1;
+  background-color: #d3d6da;
+  color: 'lightgray';
+  display: flex;
   justify-content: center;
   align-items: center;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.3);
-  transition: all 0.2s 1.5s;
+  text-transform: uppercase;
+  width: 50px;
+  flex: 1;
+}
+
+.big-button {
+  font-family: inherit;
+  font-weight: bold;
+  border: 0;
+  padding: 0;
+  margin: 5px 5px 0 0;
+  height: 50px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  background-color: #d3d6da;
+  color: #1a1a1b;
+  justify-content: center;
+  align-items: center;
+  text-transform: uppercase;
+  width: 100px;
 }
 
 .row {
@@ -253,34 +285,22 @@ export default {
   background-color: white;
 }
 
-button {
-  border: 1px solid darkslategray;
-  background-color: gray;
-  color: #ffffff;
-  padding: 10px 10px 10px 10px;
-  font-family: sans-serif;
-  font-variant: small-caps;
-  font-weight: bold;
-  width: 70px;
-  height:60px;
-}
-
 h1 {
   margin: 4px 0;
   font-size: 36px;
 }
 
 .correct {
-  background-color: #6aaa64 !important;
+  background-color: #6aaa64;
 }
 
 .wrongplace
  {
-  background-color: #c9b458 !important;
+  background-color: #c9b458;
 }
 
 .incorrect {
-  background-color: #787c7e !important;
+  background-color: #787c7e;
 }
 
 .shake {
